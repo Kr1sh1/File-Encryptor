@@ -15,48 +15,49 @@ class Cryptor:
         else:
             self.encrypt(file_)
 
+    def _get_fernet_instance(self, salt):
+        key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac("sha256",
+                                                            bytes(self.__password, encoding="utf-8"),
+                                                            salt,
+                                                            100000,
+                                                            dklen=32))
+        return Fernet(key)
+
     def decrypt(self, file_):
-        file_name = "".join(file_.split(".")[:-1])
+        file_name = os.path.splitext(file_)[0]
 
-        with open(file_, "rb") as file_:
-            save1 = file_.readline()
-            save2 = file_.readline()
-            save3 = file_.readline()
-            salt = save3
-            key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac("sha256", bytes(self.__password, encoding="utf-8"), salt, 100000, dklen=32))
-            f = Fernet(key)
-            decrypted = f.decrypt(save1)
-            file_extention = f.decrypt(save2)
-            save = decrypted
+        with open(file_, "rb") as _file_:
+            data = _file_.readline()
+            encrypted_file_ext = _file_.readline()
+            salt = _file_.readline()
 
-        with open(file_name + file_extention.decode(encoding="utf-8"), "wb") as file_:
-            file_.write(save)
+            f = self._get_fernet_instance(salt)
+            decrypted = f.decrypt(data)
+            file_ext = f.decrypt(encrypted_file_ext)
 
-        os.remove(file_name + ".enc")
+        with open(file_name + file_ext.decode(encoding="utf-8"), "wb") as _file_:
+            _file_.write(decrypted)
+
+        os.remove(file_)
 
     def encrypt(self, file_):
         salt = os.urandom(64)
-        key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac("sha256", bytes(self.__password, encoding="utf-8"), salt, 100000, dklen=32))
-        f = Fernet(key)
+        f = self._get_fernet_instance(salt)
+        file_name, file_ext = os.path.splitext(file_)
 
-        file_name = "".join(file_.split(".")[:-1])
-        file_extention = "." + file_.split(".")[-1]
-
-        with open(file_, "rb") as file_:
-            file__ = file_.read()
+        with open(file_, "rb") as _file_:
+            file__ = _file_.read()
             encrypted = f.encrypt(bytes(file__))
-            save1 = encrypted
-            save2 = f.encrypt(bytes(file_extention, encoding="utf-8"))
-            save3 = salt
+            encrypted_file_ext = f.encrypt(bytes(file_ext, encoding="utf-8"))
         
-        with open(file_name + ".enc", "wb") as file_:
-            file_.write(save1)
-            file_.write(b"\n")
-            file_.write(save2)
-            file_.write(b"\n")
-            file_.write(save3)
+        with open(f"{file_name}.enc", "wb") as _file_:
+            _file_.write(encrypted)
+            _file_.write(b"\n")
+            _file_.write(encrypted_file_ext)
+            _file_.write(b"\n")
+            _file_.write(salt)
 
-        os.remove(file_name + file_extention)
+        os.remove(file_)
 
 def main():
     password = sys.argv[1]
