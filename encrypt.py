@@ -2,7 +2,6 @@ import os
 import hashlib
 import sys
 import base64
-
 from cryptography.fernet import Fernet
 
 class Cryptor:
@@ -29,7 +28,7 @@ class Cryptor:
         with open(file_, "rb") as _file_:
             data = _file_.readline()
             encrypted_file_ext = _file_.readline()
-            salt = _file_.readline()
+            salt = b"".join(_file_.readlines())
 
             f = self._get_fernet_instance(salt)
             decrypted = f.decrypt(data)
@@ -41,7 +40,7 @@ class Cryptor:
         os.remove(file_)
 
     def encrypt(self, file_):
-        salt = os.urandom(64)
+        salt = os.urandom(32)
         f = self._get_fernet_instance(salt)
         file_name, file_ext = os.path.splitext(file_)
 
@@ -49,7 +48,7 @@ class Cryptor:
             file__ = _file_.read()
             encrypted = f.encrypt(bytes(file__))
             encrypted_file_ext = f.encrypt(bytes(file_ext, encoding="utf-8"))
-        
+
         with open(f"{file_name}.enc", "wb") as _file_:
             _file_.write(encrypted)
             _file_.write(b"\n")
@@ -59,13 +58,28 @@ class Cryptor:
 
         os.remove(file_)
 
+def iterate(crypt, file_):
+    if os.path.isdir(file_):
+        files = []
+        for dirpath, dirname, filename in os.walk(file_):
+            for dir_ in dirname:
+                files.append(dirpath + "/" + dir_)
+            for file_name in filename:
+                files.append(dirpath + "/" + file_name)
+            break
+
+        for file_ in files:
+            iterate(crypt, file_)
+    else:
+        crypt.operate(file_)
+
 def main():
     password = sys.argv[1]
     files = sys.argv[2:]
     crypt = Cryptor(password)
 
     for file_ in files:
-        crypt.operate(file_)
+        iterate(crypt, file_)
 
 if __name__ == "__main__":
     main()
