@@ -11,3 +11,4 @@ Performance is more dependant on the number of files than the size of data being
 
 Upcoming features:
 Multiprocessing
+Improvements to IO speed
