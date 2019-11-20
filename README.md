@@ -7,8 +7,7 @@ Usage:
 
 python encrypt.py password file1 [file2] [file3] [dir1] [dir2] ...
 
-Performace:
-On an i5 6600K @ 4.1GHz - encryption takes place at roughly 5.5GB/minute
+Performance is more dependant on the number of files than the size of data being operated on.
 
 Upcoming features:
 Multiprocessing
