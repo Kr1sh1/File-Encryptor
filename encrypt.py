@@ -2,6 +2,7 @@ import os
 import hashlib
 import sys
 import base64
+from getpass import getpass
 from cryptography.fernet import Fernet
 
 class Cryptor:
@@ -74,8 +75,12 @@ def iterate(crypt, file_):
         crypt.operate(file_)
 
 def main():
-    password = sys.argv[1]
-    files = sys.argv[2:]
+    files = sys.argv[1:]
+    password = getpass("Password:")
+    re_password = getpass("Confirm Password:")
+    if password != re_password:
+        print("Passwords don't match")
+        return
     crypt = Cryptor(password)
 
     for file_ in files:
