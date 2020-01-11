@@ -2,18 +2,29 @@ import os
 import hashlib
 import sys
 import base64
+import threading
+import time
+
 from getpass import getpass
 from cryptography.fernet import Fernet
+
+global threads
+threads = []
 
 class Cryptor:
     def __init__(self, password):
         self.__password = password
 
     def operate(self, file_):
+        global threads
         if file_.endswith("enc"):
-            self.decrypt(file_)
+            t = threading.Thread(target=self.decrypt, args=(file_,))
+            t.start()
+            threads.append(t)
         else:
-            self.encrypt(file_)
+            t = threading.Thread(target=self.encrypt, args=(file_,))
+            t.start()
+            threads.append(t)
 
     def _get_fernet_instance(self, salt):
         key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac("sha256",
@@ -75,7 +86,8 @@ def iterate(crypt, file_):
         crypt.operate(file_)
 
 def main():
-    files = sys.argv[1:]
+    #files = sys.argv[1:]
+    files = ["test"]
     password = getpass("Password:")
     re_password = getpass("Confirm Password:")
     if password != re_password:
@@ -87,4 +99,17 @@ def main():
         iterate(crypt, file_)
 
 if __name__ == "__main__":
+    time1 = time.time()
     main()
+
+    while True:
+        for x in threads:
+            if x.is_alive():
+                time.sleep(0.5)
+                broken = True
+                break
+        else:
+            break
+        
+
+    print(f"Completed in {round(time.time()-time1, 4)}")

@@ -8,7 +8,3 @@ Usage:
 python encrypt.py file1 [file2] [file3] [dir1] [dir2] ...
 
 Performance is more dependant on the number of files than the size of data being operated on.
-
-Upcoming features:
-Multiprocessing
-Improvements to IO speed
