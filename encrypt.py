@@ -14,6 +14,8 @@ threads = []
 class Cryptor:
     def __init__(self, password):
         self.__password = password
+        self.__fernet_key = None
+        self.__salt = None
 
     def operate(self, file_):
         global threads
@@ -26,13 +28,13 @@ class Cryptor:
             t.start()
             threads.append(t)
 
-    def _get_fernet_instance(self, salt):
+    def generate_fernet_instance(self, salt):
         key = base64.urlsafe_b64encode(hashlib.pbkdf2_hmac("sha256",
                                                             bytes(self.__password, encoding="utf-8"),
                                                             salt,
                                                             100000,
                                                             dklen=32))
-        return Fernet(key)
+        self.__fernet_key = Fernet(key)
 
     def decrypt(self, file_):
         file_name = os.path.splitext(file_)[0]
@@ -40,11 +42,15 @@ class Cryptor:
         with open(file_, "rb") as _file_:
             data = _file_.readline()
             encrypted_file_ext = _file_.readline()
-            salt = b"".join(_file_.readlines())
 
-            f = self._get_fernet_instance(salt)
-            decrypted = f.decrypt(data)
-            file_ext = f.decrypt(encrypted_file_ext)
+            if self.__salt is None:
+                self.__salt = b"".join(_file_.readlines())
+
+        if self.__fernet_key is None:
+            self.generate_fernet_instance(self.__salt)
+
+        decrypted = self.__fernet_key.decrypt(data)
+        file_ext = self.__fernet_key.decrypt(encrypted_file_ext)
 
         with open(file_name + file_ext.decode(encoding="utf-8"), "wb") as _file_:
             _file_.write(decrypted)
@@ -52,21 +58,24 @@ class Cryptor:
         os.remove(file_)
 
     def encrypt(self, file_):
-        salt = os.urandom(32)
-        f = self._get_fernet_instance(salt)
+        if self.__salt is None:
+            self.__salt = os.urandom(32)
+        if self.__fernet_key is None:
+            self.generate_fernet_instance(self.__salt)
         file_name, file_ext = os.path.splitext(file_)
 
         with open(file_, "rb") as _file_:
             file__ = _file_.read()
-            encrypted = f.encrypt(bytes(file__))
-            encrypted_file_ext = f.encrypt(bytes(file_ext, encoding="utf-8"))
+
+        encrypted = self.__fernet_key.encrypt(bytes(file__))
+        encrypted_file_ext = self.__fernet_key.encrypt(bytes(file_ext, encoding="utf-8"))
 
         with open(f"{file_name}.enc", "wb") as _file_:
             _file_.write(encrypted)
             _file_.write(b"\n")
             _file_.write(encrypted_file_ext)
             _file_.write(b"\n")
-            _file_.write(salt)
+            _file_.write(self.__salt)
 
         os.remove(file_)
 
