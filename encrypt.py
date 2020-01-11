@@ -86,8 +86,7 @@ def iterate(crypt, file_):
         crypt.operate(file_)
 
 def main():
-    #files = sys.argv[1:]
-    files = ["test"]
+    files = sys.argv[1:]
     password = getpass("Password:")
     re_password = getpass("Confirm Password:")
     if password != re_password:
