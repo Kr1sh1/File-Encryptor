@@ -20,11 +20,11 @@ class Cryptor:
     def operate(self, file_):
         global threads
         if file_.endswith("enc"):
-            t = threading.Thread(target=self.decrypt, args=(file_,))
+            t = threading.Thread(target=self.decrypt, args=(file_,), daemon=True)
             t.start()
             threads.append(t)
         else:
-            t = threading.Thread(target=self.encrypt, args=(file_,))
+            t = threading.Thread(target=self.encrypt, args=(file_,), daemon=True)
             t.start()
             threads.append(t)
 
