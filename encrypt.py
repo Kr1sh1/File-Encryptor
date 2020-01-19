@@ -105,7 +105,6 @@ if __name__ == "__main__":
         for x in threads:
             if x.is_alive():
                 time.sleep(0.5)
-                broken = True
                 break
         else:
             break
