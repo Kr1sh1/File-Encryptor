@@ -62,11 +62,7 @@ class Cryptor:
             encrypted_file_ext = f.encrypt(bytes(file_ext, encoding="utf-8"))
 
         with open(f"{file_name}.enc", "wb") as _file_:
-            _file_.write(encrypted)
-            _file_.write(b"\n")
-            _file_.write(encrypted_file_ext)
-            _file_.write(b"\n")
-            _file_.write(salt)
+            _file_.write(encrypted + b"\n" + encrypted_file_ext + b"\n" + salt)
 
         os.remove(file_)
 
